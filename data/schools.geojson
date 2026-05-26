@@ -1,0 +1,1307 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8403767,
+          1.3027978
+        ]
+      },
+      "properties": {
+        "name": "ACC EduHub",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "51",
+        "postal": null,
+        "zone": "South",
+        "established": 1921,
+        "students": 2330,
+        "website": "https://www.google.com/search?q=ACC%20EduHub%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8696897,
+          1.387266
+        ]
+      },
+      "properties": {
+        "name": "Hua Language Centre",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1917,
+        "students": 1906,
+        "website": "https://www.google.com/search?q=Hua%20Language%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8696218,
+          1.3872695
+        ]
+      },
+      "properties": {
+        "name": "Jan & Elly English Language School",
+        "type": "Independent",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 2008,
+        "students": 1048,
+        "website": "https://www.google.com/search?q=Jan%20%26%20Elly%20English%20Language%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8379257,
+          1.3386291
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Specialised Independent",
+        "level": "Secondary / JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1996,
+        "students": 1505,
+        "website": "https://www.google.com/search?q=Unknown%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8490994,
+          1.3800986
+        ]
+      },
+      "properties": {
+        "name": "Nanyang Polytechnic",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "180 Ang Mo Kio Avenue 8",
+        "postal": "569830",
+        "zone": "North-East",
+        "established": 1923,
+        "students": 1734,
+        "website": "http://www.nyp.edu.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8563216,
+          1.3775869
+        ]
+      },
+      "properties": {
+        "name": "ITE College Central",
+        "type": "Specialised Independent",
+        "level": "JC",
+        "address": "2 Ang Mo Kio Drive",
+        "postal": "567720",
+        "zone": "West",
+        "established": 1954,
+        "students": 1598,
+        "website": "https://www.google.com/search?q=ITE%20College%20Central%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.6834422,
+          1.3304504
+        ]
+      },
+      "properties": {
+        "name": "SAFTI Military Institute",
+        "type": "Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1939,
+        "students": 1304,
+        "website": "https://www.google.com/search?q=SAFTI%20Military%20Institute%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8204181,
+          1.406648
+        ]
+      },
+      "properties": {
+        "name": "Madrasah At-Tahzibiah Al-Islamiah",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1908,
+        "students": 1869,
+        "website": "https://www.google.com/search?q=Madrasah%20At-Tahzibiah%20Al-Islamiah%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8180784,
+          1.2822628
+        ]
+      },
+      "properties": {
+        "name": "Eager Beaver Schoolhouse @ Bukit Merah Central",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "3500A Bukit Merah Central",
+        "postal": "159838",
+        "zone": "North-East",
+        "established": 1970,
+        "students": 2068,
+        "website": "http://www.eb.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8474726,
+          1.2817516
+        ]
+      },
+      "properties": {
+        "name": "Citikids Academy",
+        "type": "Government-Aided",
+        "level": "Secondary / JC",
+        "address": "105 Amoy Street",
+        "postal": "069925",
+        "zone": "South",
+        "established": 2009,
+        "students": 2259,
+        "website": "http://citikids.com.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8917376,
+          1.3111407
+        ]
+      },
+      "properties": {
+        "name": "Chin Lien Bible Seminary",
+        "type": "Specialised Independent",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1938,
+        "students": 1571,
+        "website": "https://www.google.com/search?q=Chin%20Lien%20Bible%20Seminary%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.6823534,
+          1.3473411
+        ]
+      },
+      "properties": {
+        "name": "Air Traffic Management Research Institute",
+        "type": "Government",
+        "level": "Secondary",
+        "address": "65 Nanyang Drive",
+        "postal": "637460",
+        "zone": "Central",
+        "established": 1977,
+        "students": 1230,
+        "website": "http://atmri.ntu.edu.sg"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8460419,
+          1.3176739
+        ]
+      },
+      "properties": {
+        "name": "SJIJ",
+        "type": "Government",
+        "level": "Secondary / JC",
+        "address": "Essex Road",
+        "postal": null,
+        "zone": "North",
+        "established": 1998,
+        "students": 1531,
+        "website": "https://www.google.com/search?q=SJIJ%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8249617,
+          1.2909395
+        ]
+      },
+      "properties": {
+        "name": "Little Skool-House Delta House",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "2 Alexandra Road",
+        "postal": "159919",
+        "zone": "North-East",
+        "established": 1939,
+        "students": 2049,
+        "website": "https://www.google.com/search?q=Little%20Skool-House%20Delta%20House%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7979765,
+          1.3048653
+        ]
+      },
+      "properties": {
+        "name": "Big Bubble Dive Centre",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1978,
+        "students": 1308,
+        "website": "https://www.google.com/search?q=Big%20Bubble%20Dive%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8593653,
+          1.3035327
+        ]
+      },
+      "properties": {
+        "name": "The Dive Company",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1989,
+        "students": 1855,
+        "website": "https://www.google.com/search?q=The%20Dive%20Company%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8815789,
+          1.3155564
+        ]
+      },
+      "properties": {
+        "name": "Sunny Cove LLP Dive School",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "Ajunied Road",
+        "postal": null,
+        "zone": "West",
+        "established": 1973,
+        "students": 2426,
+        "website": "https://www.google.com/search?q=Sunny%20Cove%20LLP%20Dive%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7934627,
+          1.3016693
+        ]
+      },
+      "properties": {
+        "name": "MindChamps PreSchool @ Biopolis",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "3 Biopolis Drive",
+        "postal": "138623",
+        "zone": "Central",
+        "established": 1910,
+        "students": 2448,
+        "website": "https://www.google.com/search?q=MindChamps%20PreSchool%20%40%20Biopolis%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.875052,
+          1.3500698
+        ]
+      },
+      "properties": {
+        "name": "SparkleTots Pre-school",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "417 Serangoon Central",
+        "postal": "550417",
+        "zone": "North",
+        "established": 1998,
+        "students": 1679,
+        "website": "https://www.google.com/search?q=SparkleTots%20Pre-school%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7597575,
+          1.3131754
+        ]
+      },
+      "properties": {
+        "name": "Thit Sar Parami",
+        "type": "Government",
+        "level": "Secondary / JC",
+        "address": "60 West Coast Lane",
+        "postal": "127790",
+        "zone": "Central",
+        "established": 1914,
+        "students": 1242,
+        "website": "http://thitsarparamisociety.com"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8318682,
+          1.3077267
+        ]
+      },
+      "properties": {
+        "name": "General Assembly",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "8 Claymore Hill",
+        "postal": null,
+        "zone": "East",
+        "established": 1909,
+        "students": 1186,
+        "website": "https://www.google.com/search?q=General%20Assembly%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.719728,
+          1.3373631
+        ]
+      },
+      "properties": {
+        "name": "Pro-Teach Education",
+        "type": "Government-Aided",
+        "level": "Secondary / JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1974,
+        "students": 1295,
+        "website": "https://www.google.com/search?q=Pro-Teach%20Education%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9049886,
+          1.3061535
+        ]
+      },
+      "properties": {
+        "name": "Raymond Studio",
+        "type": "Government-Aided",
+        "level": "Secondary / JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1992,
+        "students": 1349,
+        "website": "https://www.google.com/search?q=Raymond%20Studio%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9070331,
+          1.3075331
+        ]
+      },
+      "properties": {
+        "name": "Staccato Music School",
+        "type": "Specialised Independent",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1931,
+        "students": 1923,
+        "website": "https://www.google.com/search?q=Staccato%20Music%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7941745,
+          1.2964558
+        ]
+      },
+      "properties": {
+        "name": "Centre Stage School of the Arts",
+        "type": "Government-Aided",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1993,
+        "students": 2481,
+        "website": "http://www.centre-stage.com/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8484435,
+          1.3373271
+        ]
+      },
+      "properties": {
+        "name": "PSB Academy STEM Campus",
+        "type": "Government",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": "319579",
+        "zone": "East",
+        "established": 1939,
+        "students": 1456,
+        "website": "https://www.psb-academy.edu.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8416396,
+          1.4332012
+        ]
+      },
+      "properties": {
+        "name": "iMatter Learning Centre",
+        "type": "Government-Aided",
+        "level": "Secondary",
+        "address": "iMatter Learning Centre 18 Yishun Avenue 9 #02-48",
+        "postal": "768897",
+        "zone": "North-East",
+        "established": 1995,
+        "students": 2412,
+        "website": "https://imatter.com.sg"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7836142,
+          1.2957549
+        ]
+      },
+      "properties": {
+        "name": "Faculty of Dentistry",
+        "type": "Independent",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1969,
+        "students": 1424,
+        "website": "https://www.google.com/search?q=Faculty%20of%20Dentistry%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8357575,
+          1.3010033
+        ]
+      },
+      "properties": {
+        "name": "MADDspace",
+        "type": "Specialised Independent",
+        "level": "4",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1956,
+        "students": 1734,
+        "website": "https://www.google.com/search?q=MADDspace%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8690631,
+          1.3421391
+        ]
+      },
+      "properties": {
+        "name": "Singapore Power Training Institute",
+        "type": "Government",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1920,
+        "students": 1660,
+        "website": "https://www.google.com/search?q=Singapore%20Power%20Training%20Institute%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8204705,
+          1.2650858
+        ]
+      },
+      "properties": {
+        "name": "I Can Read",
+        "type": "Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1990,
+        "students": 1102,
+        "website": "https://www.google.com/search?q=I%20Can%20Read%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8204957,
+          1.2649537
+        ]
+      },
+      "properties": {
+        "name": "Heguru Method Learning Centre",
+        "type": "Specialised Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1902,
+        "students": 1969,
+        "website": "https://www.google.com/search?q=Heguru%20Method%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8414605,
+          1.2803337
+        ]
+      },
+      "properties": {
+        "name": "Focus Music",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "41 Keong Saik Road",
+        "postal": "089146",
+        "zone": "West",
+        "established": 1913,
+        "students": 2260,
+        "website": "https://www.focusmusic.com.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9018483,
+          1.4062209
+        ]
+      },
+      "properties": {
+        "name": "Heguru Education Centre",
+        "type": "Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1943,
+        "students": 1213,
+        "website": "https://www.google.com/search?q=Heguru%20Education%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8325514,
+          1.3071636
+        ]
+      },
+      "properties": {
+        "name": "NPS International School",
+        "type": "Independent",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1954,
+        "students": 1022,
+        "website": "https://www.google.com/search?q=NPS%20International%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8470822,
+          1.2892813
+        ]
+      },
+      "properties": {
+        "name": "3dsense Media School",
+        "type": "Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1932,
+        "students": 1118,
+        "website": "https://www.google.com/search?q=3dsense%20Media%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9191042,
+          1.3252259
+        ]
+      },
+      "properties": {
+        "name": "LTA Rail Academy",
+        "type": "Independent",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 2009,
+        "students": 1590,
+        "website": "https://www.google.com/search?q=LTA%20Rail%20Academy%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8423226,
+          1.2470486
+        ]
+      },
+      "properties": {
+        "name": "Quayside Isle Preparatory School",
+        "type": "Government-Aided",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1956,
+        "students": 1887,
+        "website": "https://www.quips.edu.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8421784,
+          1.2466333
+        ]
+      },
+      "properties": {
+        "name": "Invictus International School",
+        "type": "Government",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1968,
+        "students": 1022,
+        "website": "https://www.sentosa.invictus.school/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8266078,
+          1.2864237
+        ]
+      },
+      "properties": {
+        "name": "HiArt",
+        "type": "Government",
+        "level": "3",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1939,
+        "students": 971,
+        "website": "https://www.google.com/search?q=HiArt%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8279807,
+          1.2862383
+        ]
+      },
+      "properties": {
+        "name": "Confucius Mandarin Institute",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 2010,
+        "students": 2441,
+        "website": "https://www.google.com/search?q=Confucius%20Mandarin%20Institute%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8279814,
+          1.2863194
+        ]
+      },
+      "properties": {
+        "name": "Stalford Learning Centre",
+        "type": "Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1928,
+        "students": 1181,
+        "website": "https://www.google.com/search?q=Stalford%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.828089,
+          1.2862248
+        ]
+      },
+      "properties": {
+        "name": "Kent Ridge Education",
+        "type": "Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 2012,
+        "students": 1955,
+        "website": "https://www.google.com/search?q=Kent%20Ridge%20Education%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8290983,
+          1.286091
+        ]
+      },
+      "properties": {
+        "name": "AGrader Learning Centre",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1952,
+        "students": 1137,
+        "website": "https://www.google.com/search?q=AGrader%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.87399,
+          1.348775
+        ]
+      },
+      "properties": {
+        "name": "Dyslexia Association of Singapore Serangoon Learning Centre",
+        "type": "Independent",
+        "level": "0",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1900,
+        "students": 1975,
+        "website": "https://www.google.com/search?q=Dyslexia%20Association%20of%20Singapore%20Serangoon%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.847908,
+          1.3717566
+        ]
+      },
+      "properties": {
+        "name": "Artlette",
+        "type": "Specialised Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 2015,
+        "students": 2134,
+        "website": "https://www.google.com/search?q=Artlette%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8285461,
+          1.3062686
+        ]
+      },
+      "properties": {
+        "name": "Julia Gabriel Centre",
+        "type": "Specialised Independent",
+        "level": "3",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1938,
+        "students": 931,
+        "website": "https://www.google.com/search?q=Julia%20Gabriel%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8502117,
+          1.333447
+        ]
+      },
+      "properties": {
+        "name": "Computhink",
+        "type": "Government-Aided",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1972,
+        "students": 1474,
+        "website": "https://www.google.com/search?q=Computhink%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9020743,
+          1.4169341
+        ]
+      },
+      "properties": {
+        "name": "Tree Art",
+        "type": "Specialised Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1942,
+        "students": 1499,
+        "website": "https://www.google.com/search?q=Tree%20Art%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.902145,
+          1.4167637
+        ]
+      },
+      "properties": {
+        "name": "Play Facto School",
+        "type": "Government-Aided",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1971,
+        "students": 1399,
+        "website": "https://www.google.com/search?q=Play%20Facto%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8361818,
+          1.352923
+        ]
+      },
+      "properties": {
+        "name": "J Carter Centre",
+        "type": "Independent",
+        "level": "0",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1971,
+        "students": 1367,
+        "website": "https://www.google.com/search?q=J%20Carter%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7836366,
+          1.336727
+        ]
+      },
+      "properties": {
+        "name": "Happy Art Loft",
+        "type": "Government-Aided",
+        "level": "0",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1968,
+        "students": 2107,
+        "website": "https://www.google.com/search?q=Happy%20Art%20Loft%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.862368,
+          1.3024208
+        ]
+      },
+      "properties": {
+        "name": "Code Bright",
+        "type": "Government-Aided",
+        "level": "school",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1969,
+        "students": 1923,
+        "website": "https://www.google.com/search?q=Code%20Bright%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.816058,
+          1.2842802
+        ]
+      },
+      "properties": {
+        "name": "Acetek baking school",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1962,
+        "students": 1816,
+        "website": "https://www.google.com/search?q=Acetek%20baking%20school%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9016351,
+          1.3040597
+        ]
+      },
+      "properties": {
+        "name": "Chess Academy (Singapore)",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1966,
+        "students": 1421,
+        "website": "https://www.google.com/search?q=Chess%20Academy%20%28Singapore%29%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9040726,
+          1.3048359
+        ]
+      },
+      "properties": {
+        "name": "Art Zillions",
+        "type": "Government",
+        "level": "-1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1923,
+        "students": 1433,
+        "website": "https://www.google.com/search?q=Art%20Zillions%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9029959,
+          1.3037821
+        ]
+      },
+      "properties": {
+        "name": "Art Zone",
+        "type": "Specialised Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1946,
+        "students": 1220,
+        "website": "https://www.google.com/search?q=Art%20Zone%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8963174,
+          1.3931066
+        ]
+      },
+      "properties": {
+        "name": "Dyslexia Association Of Singapore Sengkang Learning Centre",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1916,
+        "students": 809,
+        "website": "https://www.google.com/search?q=Dyslexia%20Association%20Of%20Singapore%20Sengkang%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.6816202,
+          1.3461885
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1960,
+        "students": 1921,
+        "website": "https://www.google.com/search?q=Unknown%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.855961,
+          1.2899202
+        ]
+      },
+      "properties": {
+        "name": "Hiart",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1937,
+        "students": 1283,
+        "website": "https://www.google.com/search?q=Hiart%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9059361,
+          1.4103158
+        ]
+      },
+      "properties": {
+        "name": "Artary Academy of Children's Art",
+        "type": "Government",
+        "level": "3",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1910,
+        "students": 1356,
+        "website": "https://www.google.com/search?q=Artary%20Academy%20of%20Children%27s%20Art%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9549587,
+          1.3788187
+        ]
+      },
+      "properties": {
+        "name": "Happy Fish Swim School",
+        "type": "Government",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1928,
+        "students": 832,
+        "website": "https://www.google.com/search?q=Happy%20Fish%20Swim%20School%20Singapore"
+      }
+    }
+  ]
+}

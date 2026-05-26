@@ -1,0 +1,5504 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Web GIS Interaktif — Persebaran Sekolah dan Taman Kanak-Kanak di Singapura" />
+  <title>Persebaran Sekolah &amp; TK di Singapore</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ───────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 1000;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #6366f1, #a78bfa, #6366f1, transparent);
+    }
+
+    .header-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .header-text h1 {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e2e8f0, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.3px;
+    }
+
+    .header-text p {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    .header-stats {
+      margin-left: auto;
+      display: flex;
+      gap: 18px;
+    }
+
+    .stat-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+      border-radius: 10px;
+      padding: 8px 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .stat-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    .stat-dot.blue {
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .stat-dot.yellow {
+      background: #facc15;
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .stat-count {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    /* ── Main Content (Sidebar + Map) ─────────────── */
+    .main-content {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ──────────────────────────────────── */
+    .sidebar {
+      width: 360px;
+      background: rgba(15, 23, 42, 0.98);
+      border-right: 1px solid rgba(99, 102, 241, 0.15);
+      display: flex;
+      flex-direction: column;
+      z-index: 500;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .sidebar.collapsed {
+      transform: translateX(-360px);
+      width: 0;
+      min-width: 0;
+      border-right: none;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 14px;
+      right: -44px;
+      width: 38px;
+      height: 38px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 0 10px 10px 0;
+      color: #e2e8f0;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 600;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(12px);
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+    }
+
+    .sidebar.collapsed .sidebar-toggle {
+      right: -44px;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .sidebar-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    /* Search Box */
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-box input::placeholder {
+      color: #64748b;
+    }
+
+    .search-box input:focus {
+      border-color: rgba(99, 102, 241, 0.5);
+      background: rgba(30, 41, 59, 0.8);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: #64748b;
+      pointer-events: none;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .filter-tab {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid rgba(99, 102, 241, 0.12);
+      border-radius: 8px;
+      background: transparent;
+      color: #94a3b8;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .filter-tab:hover {
+      background: rgba(99, 102, 241, 0.08);
+      color: #cbd5e1;
+    }
+
+    .filter-tab.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+    }
+
+    .filter-tab .tab-count {
+      display: inline-block;
+      background: rgba(99, 102, 241, 0.2);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 10px;
+      margin-left: 4px;
+      font-weight: 700;
+    }
+
+    /* Sidebar List */
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+    }
+
+    .sidebar-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-list::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 10px;
+    }
+
+    .sidebar-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.4);
+    }
+
+    /* List Item */
+    .list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+    }
+
+    .list-item:hover {
+      background: rgba(99, 102, 241, 0.06);
+      border-color: rgba(99, 102, 241, 0.12);
+    }
+
+    .list-item.active {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    .list-item-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .list-item-dot.school {
+      background: #3b82f6;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .list-item-dot.kindergarten {
+      background: #facc15;
+      box-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
+    }
+
+    .list-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      line-height: 1.3;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-item-meta {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .list-item-meta span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .list-item-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-top: 5px;
+      display: inline-block;
+    }
+
+    .list-item-badge.school {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .list-item-badge.kindergarten {
+      background: rgba(250, 204, 21, 0.12);
+      color: #fde047;
+      border: 1px solid rgba(250, 204, 21, 0.2);
+    }
+
+    .list-item-arrow {
+      color: #475569;
+      font-size: 12px;
+      margin-top: 4px;
+      transition: transform 0.2s;
+    }
+
+    .list-item:hover .list-item-arrow {
+      transform: translateX(3px);
+      color: #6366f1;
+    }
+
+    /* No Results */
+    .no-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+
+    .no-results-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    .no-results-text {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(99, 102, 241, 0.1);
+      font-size: 11px;
+      color: #475569;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* ── Map Container ────────────────────────────── */
+    #map {
+      flex: 1;
+      z-index: 1;
+    }
+
+    /* ── Custom Popups ────────────────────────────── */
+    .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.95) !important;
+      backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(99, 102, 241, 0.25) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(99, 102, 241, 0.1) !important;
+      color: #e2e8f0 !important;
+      padding: 0 !important;
+      overflow: hidden;
+    }
+
+    .leaflet-popup-content {
+      margin: 0 !important;
+      min-width: 280px;
+    }
+
+    .leaflet-popup-tip {
+      background: rgba(15, 23, 42, 0.95) !important;
+      border: 1px solid rgba(99, 102, 241, 0.25) !important;
+      box-shadow: none !important;
+    }
+
+    .leaflet-popup-close-button {
+      color: #94a3b8 !important;
+      font-size: 20px !important;
+      padding: 6px 10px 0 0 !important;
+      transition: color 0.2s !important;
+    }
+
+    .leaflet-popup-close-button:hover {
+      color: #e2e8f0 !important;
+    }
+
+    .popup-card {
+      padding: 0;
+    }
+
+    .popup-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .popup-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .popup-header.school {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.03));
+    }
+
+    .popup-header.school::before {
+      background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
+    }
+
+    .popup-header.kindergarten {
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.15), rgba(250, 204, 21, 0.03));
+    }
+
+    .popup-header.kindergarten::before {
+      background: linear-gradient(90deg, #facc15, #fde047, #facc15);
+    }
+
+    .popup-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .popup-tag.school {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .popup-tag.kindergarten {
+      background: rgba(250, 204, 21, 0.2);
+      color: #fde047;
+      border: 1px solid rgba(250, 204, 21, 0.3);
+    }
+
+    .popup-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1.35;
+    }
+
+    .popup-body {
+      padding: 14px 20px 18px;
+    }
+
+    .popup-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.07);
+      gap: 14px;
+    }
+
+    .popup-row:last-child {
+      border-bottom: none;
+    }
+
+    .popup-key {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .popup-value {
+      font-size: 12px;
+      font-weight: 500;
+      color: #cbd5e1;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .popup-value a {
+      color: #818cf8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .popup-value a:hover {
+      color: #a5b4fc;
+      text-decoration: underline;
+    }
+
+    .popup-value .accredited-yes {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .popup-value .accredited-no {
+      color: #f87171;
+      font-weight: 600;
+    }
+
+    /* ── Popup Image ──────────────────────────────── */
+    .popup-image-container {
+      width: 100%;
+      height: 150px;
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .popup-img-skeleton {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+      animation: pulse-img 1.5s infinite;
+    }
+
+    @keyframes pulse-img {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    .popup-img-loaded {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.3s ease;
+    }
+
+    .popup-no-img {
+      font-size: 11px;
+      color: #64748b;
+      font-style: italic;
+    }
+
+    /* ── Legend ────────────────────────────────────── */
+    .legend-control {
+      background: rgba(15, 23, 42, 0.92) !important;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99, 102, 241, 0.2) !important;
+      border-radius: 14px !important;
+      padding: 16px 20px !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.08) !important;
+      color: #e2e8f0;
+      min-width: 180px;
+    }
+
+    .legend-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+    }
+
+    .legend-marker {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .legend-marker.blue {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .legend-marker.yellow {
+      background: linear-gradient(135deg, #facc15, #eab308);
+      box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
+    }
+
+    .legend-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #cbd5e1;
+    }
+
+    /* ── Layer Control Override ────────────────────── */
+    .leaflet-control-layers {
+      background: rgba(15, 23, 42, 0.92) !important;
+      backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(99, 102, 241, 0.2) !important;
+      border-radius: 12px !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+      color: #e2e8f0 !important;
+      padding: 0 !important;
+    }
+
+    .leaflet-control-layers-toggle {
+      width: 40px !important;
+      height: 40px !important;
+      background-size: 22px 22px !important;
+      border-radius: 10px !important;
+      background-color: rgba(15, 23, 42, 0.92) !important;
+      border: 1px solid rgba(99, 102, 241, 0.2) !important;
+      backdrop-filter: blur(8px) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .leaflet-control-layers-toggle:hover {
+      border-color: rgba(99, 102, 241, 0.5) !important;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2) !important;
+    }
+
+    .leaflet-control-layers-expanded {
+      padding: 14px 18px 14px 10px !important;
+    }
+
+    .leaflet-control-layers-overlays label {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      padding: 4px 6px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      transition: background 0.15s !important;
+      font-size: 13px !important;
+      font-weight: 500 !important;
+    }
+
+    .leaflet-control-layers-overlays label:hover {
+      background: rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .leaflet-control-layers-selector {
+      accent-color: #6366f1;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ── Zoom Control ─────────────────────────────── */
+    .leaflet-control-zoom a {
+      background: rgba(15, 23, 42, 0.92) !important;
+      color: #e2e8f0 !important;
+      border: 1px solid rgba(99, 102, 241, 0.2) !important;
+      backdrop-filter: blur(8px) !important;
+      width: 36px !important;
+      height: 36px !important;
+      line-height: 36px !important;
+      font-size: 16px !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: rgba(30, 41, 59, 0.95) !important;
+      border-color: rgba(99, 102, 241, 0.5) !important;
+    }
+
+    .leaflet-control-zoom-in {
+      border-radius: 10px 10px 0 0 !important;
+    }
+
+    .leaflet-control-zoom-out {
+      border-radius: 0 0 10px 10px !important;
+    }
+
+    /* ── Attribution ──────────────────────────────── */
+    .leaflet-control-attribution {
+      background: rgba(15, 23, 42, 0.8) !important;
+      color: #64748b !important;
+      font-size: 10px !important;
+      backdrop-filter: blur(8px) !important;
+      border-radius: 8px 0 0 0 !important;
+    }
+
+    .leaflet-control-attribution a {
+      color: #818cf8 !important;
+    }
+
+    /* ── Loading Overlay ──────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader-ring {
+      width: 52px;
+      height: 52px;
+      border: 3px solid rgba(99, 102, 241, 0.15);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      margin-top: 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Dark Map Tiles ───────────────────────────── */
+    .leaflet-tile-pane {
+      filter: saturate(0.85) brightness(0.92);
+    }
+
+    /* ── Responsive ───────────────────────────────── */
+    @media (max-width: 768px) {
+      .header { padding: 10px 16px; gap: 10px; }
+      .header-icon { width: 34px; height: 34px; font-size: 17px; border-radius: 8px; }
+      .header-text h1 { font-size: 15px; }
+      .header-text p { font-size: 10px; }
+      .header-stats { display: none; }
+      .legend-control { min-width: 140px; padding: 12px 14px !important; }
+      .sidebar { width: 300px; }
+      .sidebar.collapsed { transform: translateX(-300px); }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar { width: 100%; position: absolute; top: 0; bottom: 0; left: 0; }
+      .sidebar.collapsed { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-ring"></div>
+    <div class="loader-text">Memuat peta …</div>
+  </div>
+
+  <!-- Header -->
+  <header class="header" id="appHeader">
+    <div class="header-icon">🗺️</div>
+    <div class="header-text">
+      <h1>Persebaran Sekolah &amp; TK di Singapore</h1>
+      <p>Web GIS Interaktif</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-badge">
+        <span class="stat-dot blue"></span>
+        <span class="stat-label">Sekolah</span>
+        <span class="stat-count" id="schoolCount">0</span>
+      </div>
+      <div class="stat-badge">
+        <span class="stat-dot yellow"></span>
+        <span class="stat-label">TK</span>
+        <span class="stat-count" id="tkCount">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">☰</button>
+
+      <div class="sidebar-header">
+        <div class="sidebar-title">📍 Daftar Lokasi</div>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Cari nama, alamat, zona…" />
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" id="tabAll">
+          Semua <span class="tab-count" id="countAll">0</span>
+        </button>
+        <button class="filter-tab" data-filter="school" id="tabSchool">
+          🔵 Sekolah <span class="tab-count" id="countSchool">0</span>
+        </button>
+        <button class="filter-tab" data-filter="kindergarten" id="tabKindergarten">
+          🟡 TK <span class="tab-count" id="countTK">0</span>
+        </button>
+      </div>
+
+      <div class="sidebar-list" id="sidebarList">
+        <!-- Items rendered dynamically -->
+      </div>
+
+      <div class="sidebar-footer" id="sidebarFooter">
+        Menampilkan 0 lokasi
+      </div>
+    </aside>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // ── State ──────────────────────────────────────
+    var allItems = [];        // { type, props, latlng, layer }
+    var currentFilter = 'all';
+    var activeItemIndex = -1;
+
+    // ── Inisialisasi Basemaps ───────────────────────
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    });
+
+    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19
+    });
+
+    var dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      maxZoom: 19
+    });
+
+    // ── Inisialisasi Peta ──────────────────────────
+    var map = L.map('map', {
+      center: [1.3521, 103.8198],
+      zoom: 12,
+      layers: [dark], // Default layer
+      zoomControl: true
+    });
+
+    // ── Sidebar Toggle ─────────────────────────────
+    var sidebar = document.getElementById('sidebar');
+    var sidebarToggle = document.getElementById('sidebarToggle');
+
+    sidebarToggle.addEventListener('click', function () {
+      sidebar.classList.toggle('collapsed');
+      setTimeout(function () { map.invalidateSize(); }, 350);
+    });
+
+    // ── Custom Circle Marker ───────────────────────
+    function createCircleMarker(latlng, color, borderColor) {
+      return L.circleMarker(latlng, {
+        radius: 8,
+        fillColor: color,
+        color: borderColor,
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.85
+      });
+    }
+
+    // ── Popup Builder — Sekolah ────────────────────
+    function buildSchoolPopup(props, imgId) {
+      var website = props.website && props.website !== '-'
+        ? '<a href="' + props.website + '" target="_blank" rel="noopener">Buka Link</a>'
+        : '-';
+
+      return '<div class="popup-card">' +
+        '<div class="popup-image-container" id="' + imgId + '">' +
+          '<div class="popup-img-skeleton">Mencari foto di Wikipedia...</div>' +
+        '</div>' +
+        '<div class="popup-header school">' +
+          '<span class="popup-tag school">Sekolah</span>' +
+          '<div class="popup-title">' + props.name + '</div>' +
+        '</div>' +
+        '<div class="popup-body">' +
+          '<div class="popup-row"><span class="popup-key">Tipe</span><span class="popup-value">' + (props.type || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Jenjang</span><span class="popup-value">' + (props.level || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Alamat</span><span class="popup-value">' + (props.address || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Kode Pos</span><span class="popup-value">' + (props.postal || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Zona</span><span class="popup-value">' + (props.zone || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Siswa</span><span class="popup-value">' + (props.students ? props.students.toLocaleString() : '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Info</span><span class="popup-value">' + website + '</span></div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // ── Popup Builder — TK ─────────────────────────
+    function buildKindergartenPopup(props, imgId) {
+      var accredited = props.accredited
+        ? '<span class="accredited-yes">✔ Terakreditasi</span>'
+        : '<span class="accredited-no">✘ Belum</span>';
+
+      return '<div class="popup-card">' +
+        '<div class="popup-image-container" id="' + imgId + '">' +
+          '<div class="popup-img-skeleton">Mencari foto di Wikipedia...</div>' +
+        '</div>' +
+        '<div class="popup-header kindergarten">' +
+          '<span class="popup-tag kindergarten">Taman Kanak-Kanak</span>' +
+          '<div class="popup-title">' + props.name + '</div>' +
+        '</div>' +
+        '<div class="popup-body">' +
+          '<div class="popup-row"><span class="popup-key">Tipe</span><span class="popup-value">' + (props.type || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Operator</span><span class="popup-value">' + (props.operator || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Alamat</span><span class="popup-value">' + (props.address || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Kode Pos</span><span class="popup-value">' + (props.postal || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Zona</span><span class="popup-value">' + (props.zone || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Kapasitas</span><span class="popup-value">' + (props.capacity || '-') + ' anak</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Usia</span><span class="popup-value">' + (props.age_range || '-') + '</span></div>' +
+          '<div class="popup-row"><span class="popup-key">Akreditasi</span><span class="popup-value">' + accredited + '</span></div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // ── Wikipedia Image Fetcher & Fallback ─────────
+    var wikiCache = {}; // Cache to avoid duplicate requests
+    function fetchWikipediaImage(query, containerId) {
+      // Clean query (remove @ and location parts for better match)
+      var cleanQuery = query.split('@')[0].trim();
+      
+      if (wikiCache[cleanQuery] !== undefined) {
+        renderWikiImage(wikiCache[cleanQuery], cleanQuery, containerId);
+        return;
+      }
+
+      var url = 'https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=' + encodeURIComponent(cleanQuery + ' Singapore') + '&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=400&format=json&origin=*';
+      
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        var pages = data.query && data.query.pages;
+        var imgSrc = null;
+        if (pages) {
+          var pageId = Object.keys(pages)[0];
+          var thumb = pages[pageId].thumbnail;
+          if (thumb && thumb.source) {
+            imgSrc = thumb.source;
+          }
+        }
+        wikiCache[cleanQuery] = imgSrc;
+        renderWikiImage(imgSrc, cleanQuery, containerId);
+      }).catch(function(err) {
+        console.error('Wiki Error:', err);
+        wikiCache[cleanQuery] = null;
+        renderWikiImage(null, cleanQuery, containerId);
+      });
+    }
+
+    function renderWikiImage(imgSrc, queryName, containerId) {
+      var container = document.getElementById(containerId);
+      if (!container) return; // popup might be closed already
+      
+      if (imgSrc) {
+        container.innerHTML = '<img src="' + imgSrc + '" alt="' + queryName + '" class="popup-img-loaded" />';
+      } else {
+        container.innerHTML = '<div class="popup-no-img">Tidak ada foto di Wikipedia</div>';
+      }
+    }
+
+    // ── Sidebar Rendering ──────────────────────────
+    function renderSidebarList() {
+      var listEl = document.getElementById('sidebarList');
+      var query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      var filtered = allItems.filter(function (item) {
+        // Filter by tab
+        if (currentFilter !== 'all' && item.type !== currentFilter) return false;
+        // Filter by search
+        if (query) {
+          var searchable = (item.props.name + ' ' + item.props.address + ' ' + item.props.zone + ' ' + (item.props.type || '') + ' ' + (item.props.level || '') + ' ' + (item.props.operator || '')).toLowerCase();
+          return searchable.indexOf(query) !== -1;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML =
+          '<div class="no-results">' +
+            '<div class="no-results-icon">🔍</div>' +
+            '<div class="no-results-text">Tidak ada hasil ditemukan</div>' +
+          '</div>';
+      } else {
+        var html = '';
+        filtered.forEach(function (item, idx) {
+          var dotClass = item.type === 'school' ? 'school' : 'kindergarten';
+          var badgeClass = item.type === 'school' ? 'school' : 'kindergarten';
+          var badgeText = item.type === 'school' ? (item.props.level || 'Sekolah') : (item.props.operator || 'TK');
+          var metaInfo = item.type === 'school'
+            ? '<span>📍 ' + item.props.zone + '</span><span>👥 ' + item.props.students.toLocaleString() + '</span>'
+            : '<span>📍 ' + item.props.zone + '</span><span>👶 ' + item.props.capacity + '</span>';
+
+          html += '<div class="list-item" data-index="' + item.globalIndex + '" onclick="focusItem(' + item.globalIndex + ')">' +
+            '<div class="list-item-dot ' + dotClass + '"></div>' +
+            '<div class="list-item-info">' +
+              '<div class="list-item-name" title="' + item.props.name + '">' + item.props.name + '</div>' +
+              '<div class="list-item-meta">' + metaInfo + '</div>' +
+              '<span class="list-item-badge ' + badgeClass + '">' + badgeText + '</span>' +
+            '</div>' +
+            '<span class="list-item-arrow">›</span>' +
+          '</div>';
+        });
+        listEl.innerHTML = html;
+      }
+
+      document.getElementById('sidebarFooter').textContent = 'Menampilkan ' + filtered.length + ' lokasi';
+    }
+
+    // ── Focus / Zoom to Item ───────────────────────
+    function focusItem(index) {
+      var item = allItems[index];
+      if (!item) return;
+
+      // Highlight in sidebar
+      document.querySelectorAll('.list-item.active').forEach(function (el) {
+        el.classList.remove('active');
+      });
+      var el = document.querySelector('.list-item[data-index="' + index + '"]');
+      if (el) el.classList.add('active');
+
+      // Zoom and open popup
+      map.flyTo(item.latlng, 16, { duration: 0.8 });
+      item.layer.openPopup();
+    }
+
+    // ── Filter Tab Clicks ──────────────────────────
+    document.querySelectorAll('.filter-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.filter-tab').forEach(function (t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        currentFilter = this.getAttribute('data-filter');
+        renderSidebarList();
+      });
+    });
+
+    // ── Search Input ───────────────────────────────
+    document.getElementById('searchInput').addEventListener('input', function () {
+      renderSidebarList();
+    });
+
+    // ── Layer Groups ───────────────────────────────
+    var schoolLayer = L.layerGroup();
+    var kindergartenLayer = L.layerGroup();
+
+    // ── Fetch & Render Data ────────────────────────
+    var popupCounter = 0;
+
+var schoolsData = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8403767,
+          1.3027978
+        ]
+      },
+      "properties": {
+        "name": "ACC EduHub",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "51",
+        "postal": null,
+        "zone": "South",
+        "established": 1921,
+        "students": 2330,
+        "website": "https://www.google.com/search?q=ACC%20EduHub%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8696897,
+          1.387266
+        ]
+      },
+      "properties": {
+        "name": "Hua Language Centre",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1917,
+        "students": 1906,
+        "website": "https://www.google.com/search?q=Hua%20Language%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8696218,
+          1.3872695
+        ]
+      },
+      "properties": {
+        "name": "Jan & Elly English Language School",
+        "type": "Independent",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 2008,
+        "students": 1048,
+        "website": "https://www.google.com/search?q=Jan%20%26%20Elly%20English%20Language%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8379257,
+          1.3386291
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Specialised Independent",
+        "level": "Secondary / JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1996,
+        "students": 1505,
+        "website": "https://www.google.com/search?q=Unknown%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8490994,
+          1.3800986
+        ]
+      },
+      "properties": {
+        "name": "Nanyang Polytechnic",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "180 Ang Mo Kio Avenue 8",
+        "postal": "569830",
+        "zone": "North-East",
+        "established": 1923,
+        "students": 1734,
+        "website": "http://www.nyp.edu.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8563216,
+          1.3775869
+        ]
+      },
+      "properties": {
+        "name": "ITE College Central",
+        "type": "Specialised Independent",
+        "level": "JC",
+        "address": "2 Ang Mo Kio Drive",
+        "postal": "567720",
+        "zone": "West",
+        "established": 1954,
+        "students": 1598,
+        "website": "https://www.google.com/search?q=ITE%20College%20Central%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.6834422,
+          1.3304504
+        ]
+      },
+      "properties": {
+        "name": "SAFTI Military Institute",
+        "type": "Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1939,
+        "students": 1304,
+        "website": "https://www.google.com/search?q=SAFTI%20Military%20Institute%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8204181,
+          1.406648
+        ]
+      },
+      "properties": {
+        "name": "Madrasah At-Tahzibiah Al-Islamiah",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1908,
+        "students": 1869,
+        "website": "https://www.google.com/search?q=Madrasah%20At-Tahzibiah%20Al-Islamiah%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8180784,
+          1.2822628
+        ]
+      },
+      "properties": {
+        "name": "Eager Beaver Schoolhouse @ Bukit Merah Central",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "3500A Bukit Merah Central",
+        "postal": "159838",
+        "zone": "North-East",
+        "established": 1970,
+        "students": 2068,
+        "website": "http://www.eb.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8474726,
+          1.2817516
+        ]
+      },
+      "properties": {
+        "name": "Citikids Academy",
+        "type": "Government-Aided",
+        "level": "Secondary / JC",
+        "address": "105 Amoy Street",
+        "postal": "069925",
+        "zone": "South",
+        "established": 2009,
+        "students": 2259,
+        "website": "http://citikids.com.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8917376,
+          1.3111407
+        ]
+      },
+      "properties": {
+        "name": "Chin Lien Bible Seminary",
+        "type": "Specialised Independent",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1938,
+        "students": 1571,
+        "website": "https://www.google.com/search?q=Chin%20Lien%20Bible%20Seminary%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.6823534,
+          1.3473411
+        ]
+      },
+      "properties": {
+        "name": "Air Traffic Management Research Institute",
+        "type": "Government",
+        "level": "Secondary",
+        "address": "65 Nanyang Drive",
+        "postal": "637460",
+        "zone": "Central",
+        "established": 1977,
+        "students": 1230,
+        "website": "http://atmri.ntu.edu.sg"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8460419,
+          1.3176739
+        ]
+      },
+      "properties": {
+        "name": "SJIJ",
+        "type": "Government",
+        "level": "Secondary / JC",
+        "address": "Essex Road",
+        "postal": null,
+        "zone": "North",
+        "established": 1998,
+        "students": 1531,
+        "website": "https://www.google.com/search?q=SJIJ%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8249617,
+          1.2909395
+        ]
+      },
+      "properties": {
+        "name": "Little Skool-House Delta House",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "2 Alexandra Road",
+        "postal": "159919",
+        "zone": "North-East",
+        "established": 1939,
+        "students": 2049,
+        "website": "https://www.google.com/search?q=Little%20Skool-House%20Delta%20House%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7979765,
+          1.3048653
+        ]
+      },
+      "properties": {
+        "name": "Big Bubble Dive Centre",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1978,
+        "students": 1308,
+        "website": "https://www.google.com/search?q=Big%20Bubble%20Dive%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8593653,
+          1.3035327
+        ]
+      },
+      "properties": {
+        "name": "The Dive Company",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1989,
+        "students": 1855,
+        "website": "https://www.google.com/search?q=The%20Dive%20Company%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8815789,
+          1.3155564
+        ]
+      },
+      "properties": {
+        "name": "Sunny Cove LLP Dive School",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "Ajunied Road",
+        "postal": null,
+        "zone": "West",
+        "established": 1973,
+        "students": 2426,
+        "website": "https://www.google.com/search?q=Sunny%20Cove%20LLP%20Dive%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7934627,
+          1.3016693
+        ]
+      },
+      "properties": {
+        "name": "MindChamps PreSchool @ Biopolis",
+        "type": "Government-Aided",
+        "level": "Primary / Secondary",
+        "address": "3 Biopolis Drive",
+        "postal": "138623",
+        "zone": "Central",
+        "established": 1910,
+        "students": 2448,
+        "website": "https://www.google.com/search?q=MindChamps%20PreSchool%20%40%20Biopolis%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.875052,
+          1.3500698
+        ]
+      },
+      "properties": {
+        "name": "SparkleTots Pre-school",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "417 Serangoon Central",
+        "postal": "550417",
+        "zone": "North",
+        "established": 1998,
+        "students": 1679,
+        "website": "https://www.google.com/search?q=SparkleTots%20Pre-school%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7597575,
+          1.3131754
+        ]
+      },
+      "properties": {
+        "name": "Thit Sar Parami",
+        "type": "Government",
+        "level": "Secondary / JC",
+        "address": "60 West Coast Lane",
+        "postal": "127790",
+        "zone": "Central",
+        "established": 1914,
+        "students": 1242,
+        "website": "http://thitsarparamisociety.com"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8318682,
+          1.3077267
+        ]
+      },
+      "properties": {
+        "name": "General Assembly",
+        "type": "Government-Aided",
+        "level": "JC",
+        "address": "8 Claymore Hill",
+        "postal": null,
+        "zone": "East",
+        "established": 1909,
+        "students": 1186,
+        "website": "https://www.google.com/search?q=General%20Assembly%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.719728,
+          1.3373631
+        ]
+      },
+      "properties": {
+        "name": "Pro-Teach Education",
+        "type": "Government-Aided",
+        "level": "Secondary / JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1974,
+        "students": 1295,
+        "website": "https://www.google.com/search?q=Pro-Teach%20Education%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9049886,
+          1.3061535
+        ]
+      },
+      "properties": {
+        "name": "Raymond Studio",
+        "type": "Government-Aided",
+        "level": "Secondary / JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1992,
+        "students": 1349,
+        "website": "https://www.google.com/search?q=Raymond%20Studio%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9070331,
+          1.3075331
+        ]
+      },
+      "properties": {
+        "name": "Staccato Music School",
+        "type": "Specialised Independent",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1931,
+        "students": 1923,
+        "website": "https://www.google.com/search?q=Staccato%20Music%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7941745,
+          1.2964558
+        ]
+      },
+      "properties": {
+        "name": "Centre Stage School of the Arts",
+        "type": "Government-Aided",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1993,
+        "students": 2481,
+        "website": "http://www.centre-stage.com/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8484435,
+          1.3373271
+        ]
+      },
+      "properties": {
+        "name": "PSB Academy STEM Campus",
+        "type": "Government",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": "319579",
+        "zone": "East",
+        "established": 1939,
+        "students": 1456,
+        "website": "https://www.psb-academy.edu.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8416396,
+          1.4332012
+        ]
+      },
+      "properties": {
+        "name": "iMatter Learning Centre",
+        "type": "Government-Aided",
+        "level": "Secondary",
+        "address": "iMatter Learning Centre 18 Yishun Avenue 9 #02-48",
+        "postal": "768897",
+        "zone": "North-East",
+        "established": 1995,
+        "students": 2412,
+        "website": "https://imatter.com.sg"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7836142,
+          1.2957549
+        ]
+      },
+      "properties": {
+        "name": "Faculty of Dentistry",
+        "type": "Independent",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1969,
+        "students": 1424,
+        "website": "https://www.google.com/search?q=Faculty%20of%20Dentistry%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8357575,
+          1.3010033
+        ]
+      },
+      "properties": {
+        "name": "MADDspace",
+        "type": "Specialised Independent",
+        "level": "4",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1956,
+        "students": 1734,
+        "website": "https://www.google.com/search?q=MADDspace%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8690631,
+          1.3421391
+        ]
+      },
+      "properties": {
+        "name": "Singapore Power Training Institute",
+        "type": "Government",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1920,
+        "students": 1660,
+        "website": "https://www.google.com/search?q=Singapore%20Power%20Training%20Institute%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8204705,
+          1.2650858
+        ]
+      },
+      "properties": {
+        "name": "I Can Read",
+        "type": "Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1990,
+        "students": 1102,
+        "website": "https://www.google.com/search?q=I%20Can%20Read%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8204957,
+          1.2649537
+        ]
+      },
+      "properties": {
+        "name": "Heguru Method Learning Centre",
+        "type": "Specialised Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1902,
+        "students": 1969,
+        "website": "https://www.google.com/search?q=Heguru%20Method%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8414605,
+          1.2803337
+        ]
+      },
+      "properties": {
+        "name": "Focus Music",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "41 Keong Saik Road",
+        "postal": "089146",
+        "zone": "West",
+        "established": 1913,
+        "students": 2260,
+        "website": "https://www.focusmusic.com.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9018483,
+          1.4062209
+        ]
+      },
+      "properties": {
+        "name": "Heguru Education Centre",
+        "type": "Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1943,
+        "students": 1213,
+        "website": "https://www.google.com/search?q=Heguru%20Education%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8325514,
+          1.3071636
+        ]
+      },
+      "properties": {
+        "name": "NPS International School",
+        "type": "Independent",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1954,
+        "students": 1022,
+        "website": "https://www.google.com/search?q=NPS%20International%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8470822,
+          1.2892813
+        ]
+      },
+      "properties": {
+        "name": "3dsense Media School",
+        "type": "Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1932,
+        "students": 1118,
+        "website": "https://www.google.com/search?q=3dsense%20Media%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9191042,
+          1.3252259
+        ]
+      },
+      "properties": {
+        "name": "LTA Rail Academy",
+        "type": "Independent",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 2009,
+        "students": 1590,
+        "website": "https://www.google.com/search?q=LTA%20Rail%20Academy%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8423226,
+          1.2470486
+        ]
+      },
+      "properties": {
+        "name": "Quayside Isle Preparatory School",
+        "type": "Government-Aided",
+        "level": "Primary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1956,
+        "students": 1887,
+        "website": "https://www.quips.edu.sg/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8421784,
+          1.2466333
+        ]
+      },
+      "properties": {
+        "name": "Invictus International School",
+        "type": "Government",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1968,
+        "students": 1022,
+        "website": "https://www.sentosa.invictus.school/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8266078,
+          1.2864237
+        ]
+      },
+      "properties": {
+        "name": "HiArt",
+        "type": "Government",
+        "level": "3",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1939,
+        "students": 971,
+        "website": "https://www.google.com/search?q=HiArt%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8279807,
+          1.2862383
+        ]
+      },
+      "properties": {
+        "name": "Confucius Mandarin Institute",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 2010,
+        "students": 2441,
+        "website": "https://www.google.com/search?q=Confucius%20Mandarin%20Institute%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8279814,
+          1.2863194
+        ]
+      },
+      "properties": {
+        "name": "Stalford Learning Centre",
+        "type": "Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1928,
+        "students": 1181,
+        "website": "https://www.google.com/search?q=Stalford%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.828089,
+          1.2862248
+        ]
+      },
+      "properties": {
+        "name": "Kent Ridge Education",
+        "type": "Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 2012,
+        "students": 1955,
+        "website": "https://www.google.com/search?q=Kent%20Ridge%20Education%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8290983,
+          1.286091
+        ]
+      },
+      "properties": {
+        "name": "AGrader Learning Centre",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1952,
+        "students": 1137,
+        "website": "https://www.google.com/search?q=AGrader%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.87399,
+          1.348775
+        ]
+      },
+      "properties": {
+        "name": "Dyslexia Association of Singapore Serangoon Learning Centre",
+        "type": "Independent",
+        "level": "0",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1900,
+        "students": 1975,
+        "website": "https://www.google.com/search?q=Dyslexia%20Association%20of%20Singapore%20Serangoon%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.847908,
+          1.3717566
+        ]
+      },
+      "properties": {
+        "name": "Artlette",
+        "type": "Specialised Independent",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 2015,
+        "students": 2134,
+        "website": "https://www.google.com/search?q=Artlette%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8285461,
+          1.3062686
+        ]
+      },
+      "properties": {
+        "name": "Julia Gabriel Centre",
+        "type": "Specialised Independent",
+        "level": "3",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1938,
+        "students": 931,
+        "website": "https://www.google.com/search?q=Julia%20Gabriel%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8502117,
+          1.333447
+        ]
+      },
+      "properties": {
+        "name": "Computhink",
+        "type": "Government-Aided",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1972,
+        "students": 1474,
+        "website": "https://www.google.com/search?q=Computhink%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9020743,
+          1.4169341
+        ]
+      },
+      "properties": {
+        "name": "Tree Art",
+        "type": "Specialised Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1942,
+        "students": 1499,
+        "website": "https://www.google.com/search?q=Tree%20Art%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.902145,
+          1.4167637
+        ]
+      },
+      "properties": {
+        "name": "Play Facto School",
+        "type": "Government-Aided",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1971,
+        "students": 1399,
+        "website": "https://www.google.com/search?q=Play%20Facto%20School%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8361818,
+          1.352923
+        ]
+      },
+      "properties": {
+        "name": "J Carter Centre",
+        "type": "Independent",
+        "level": "0",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1971,
+        "students": 1367,
+        "website": "https://www.google.com/search?q=J%20Carter%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7836366,
+          1.336727
+        ]
+      },
+      "properties": {
+        "name": "Happy Art Loft",
+        "type": "Government-Aided",
+        "level": "0",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1968,
+        "students": 2107,
+        "website": "https://www.google.com/search?q=Happy%20Art%20Loft%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.862368,
+          1.3024208
+        ]
+      },
+      "properties": {
+        "name": "Code Bright",
+        "type": "Government-Aided",
+        "level": "school",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1969,
+        "students": 1923,
+        "website": "https://www.google.com/search?q=Code%20Bright%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.816058,
+          1.2842802
+        ]
+      },
+      "properties": {
+        "name": "Acetek baking school",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "established": 1962,
+        "students": 1816,
+        "website": "https://www.google.com/search?q=Acetek%20baking%20school%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9016351,
+          1.3040597
+        ]
+      },
+      "properties": {
+        "name": "Chess Academy (Singapore)",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1966,
+        "students": 1421,
+        "website": "https://www.google.com/search?q=Chess%20Academy%20%28Singapore%29%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9040726,
+          1.3048359
+        ]
+      },
+      "properties": {
+        "name": "Art Zillions",
+        "type": "Government",
+        "level": "-1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1923,
+        "students": 1433,
+        "website": "https://www.google.com/search?q=Art%20Zillions%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9029959,
+          1.3037821
+        ]
+      },
+      "properties": {
+        "name": "Art Zone",
+        "type": "Specialised Independent",
+        "level": "2",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "established": 1946,
+        "students": 1220,
+        "website": "https://www.google.com/search?q=Art%20Zone%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8963174,
+          1.3931066
+        ]
+      },
+      "properties": {
+        "name": "Dyslexia Association Of Singapore Sengkang Learning Centre",
+        "type": "Specialised Independent",
+        "level": "Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "established": 1916,
+        "students": 809,
+        "website": "https://www.google.com/search?q=Dyslexia%20Association%20Of%20Singapore%20Sengkang%20Learning%20Centre%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.6816202,
+          1.3461885
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Independent",
+        "level": "Primary / Secondary",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1960,
+        "students": 1921,
+        "website": "https://www.google.com/search?q=Unknown%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.855961,
+          1.2899202
+        ]
+      },
+      "properties": {
+        "name": "Hiart",
+        "type": "Government",
+        "level": "1",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "established": 1937,
+        "students": 1283,
+        "website": "https://www.google.com/search?q=Hiart%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9059361,
+          1.4103158
+        ]
+      },
+      "properties": {
+        "name": "Artary Academy of Children's Art",
+        "type": "Government",
+        "level": "3",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "established": 1910,
+        "students": 1356,
+        "website": "https://www.google.com/search?q=Artary%20Academy%20of%20Children%27s%20Art%20Singapore"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9549587,
+          1.3788187
+        ]
+      },
+      "properties": {
+        "name": "Happy Fish Swim School",
+        "type": "Government",
+        "level": "JC",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "established": 1928,
+        "students": 832,
+        "website": "https://www.google.com/search?q=Happy%20Fish%20Swim%20School%20Singapore"
+      }
+    }
+  ]
+};
+      var kindergartensData = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.774685,
+          1.4258908
+        ]
+      },
+      "properties": {
+        "name": "Singapore American School Kindergarten",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 138,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8600748,
+          1.3902277
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 295,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8605889,
+          1.3900034
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 152,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7749358,
+          1.3314987
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 288,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7385078,
+          1.3357505
+        ]
+      },
+      "properties": {
+        "name": "Seventh-day Adventist Kindergarten",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 155,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8344587,
+          1.3192937
+        ]
+      },
+      "properties": {
+        "name": "Methodist Kindergarten",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 296,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7688317,
+          1.3099684
+        ]
+      },
+      "properties": {
+        "name": "Playgroup",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 236,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.837277,
+          1.374758
+        ]
+      },
+      "properties": {
+        "name": "Bethesda Kindergarten",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "601 Ang Mo Kio Ave 4",
+        "postal": "569898",
+        "zone": "North",
+        "capacity": 70,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7659135,
+          1.376743
+        ]
+      },
+      "properties": {
+        "name": "Korean Church Kindergarten",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 189,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.841044,
+          1.2875652
+        ]
+      },
+      "properties": {
+        "name": "my first skool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 292,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8425777,
+          1.2752138
+        ]
+      },
+      "properties": {
+        "name": "my first skool",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "2 Tanjong Pagar Road",
+        "postal": "082002",
+        "zone": "West",
+        "capacity": 88,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8256028,
+          1.4413659
+        ]
+      },
+      "properties": {
+        "name": "Edelweiss Kindergarten",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "10B Jalan Jeruju",
+        "postal": "768443",
+        "zone": "North-East",
+        "capacity": 152,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8885767,
+          1.3296676
+        ]
+      },
+      "properties": {
+        "name": "E-Bridge Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "17 Circuit Road",
+        "postal": "370017",
+        "zone": "North-East",
+        "capacity": 57,
+        "age_range": "2\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9055033,
+          1.3065363
+        ]
+      },
+      "properties": {
+        "name": "Pink Tower Montessori",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "East Coast Road",
+        "postal": null,
+        "zone": "West",
+        "capacity": 233,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9093444,
+          1.3082445
+        ]
+      },
+      "properties": {
+        "name": "Dynamic World Montessori",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "East Coast Road",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 69,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9092445,
+          1.3082307
+        ]
+      },
+      "properties": {
+        "name": "House of Hot Shotz",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "East Coast Road",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 213,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9228559,
+          1.312812
+        ]
+      },
+      "properties": {
+        "name": "Zoo-phonics Kindergarten",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Burnfoot Terrace",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 286,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8438475,
+          1.2875987
+        ]
+      },
+      "properties": {
+        "name": "Kinderland",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Havelock Road",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 205,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7461261,
+          1.3218086
+        ]
+      },
+      "properties": {
+        "name": "Galilee Kindergarten",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 223,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7725135,
+          1.3413153
+        ]
+      },
+      "properties": {
+        "name": "The Kidz Club",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Lorong Kilat",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 124,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7720016,
+          1.3411776
+        ]
+      },
+      "properties": {
+        "name": "Creative Thinkers Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 139,
+        "age_range": "2\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7689391,
+          1.3396835
+        ]
+      },
+      "properties": {
+        "name": "Pariposa Preschool",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Toh Tuck Road",
+        "postal": null,
+        "zone": "South",
+        "capacity": 268,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7450154,
+          1.3767976
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Choa Chu Kang Avenue 1",
+        "postal": null,
+        "zone": "North",
+        "capacity": 291,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8420007,
+          1.2945507
+        ]
+      },
+      "properties": {
+        "name": "Cambridge Pre-School",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "River Valley Road",
+        "postal": null,
+        "zone": "West",
+        "capacity": 262,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8516862,
+          1.3092236
+        ]
+      },
+      "properties": {
+        "name": "Careworks",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 290,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.859364,
+          1.3113275
+        ]
+      },
+      "properties": {
+        "name": "Lotus Bridge International School",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "302 Jalan Besar",
+        "postal": "208963",
+        "zone": "South",
+        "capacity": 92,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7613969,
+          1.3086831
+        ]
+      },
+      "properties": {
+        "name": "Big Foot Pre School",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "West Coast Road",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 157,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8540495,
+          1.3254935
+        ]
+      },
+      "properties": {
+        "name": "Little Footprints Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "60 Kim Keat Road",
+        "postal": null,
+        "zone": "West",
+        "capacity": 248,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7804148,
+          1.4359027
+        ]
+      },
+      "properties": {
+        "name": "PCF Marsiling",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 280,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9106593,
+          1.3245656
+        ]
+      },
+      "properties": {
+        "name": "PAP Kindergarten",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 116,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9119728,
+          1.3227708
+        ]
+      },
+      "properties": {
+        "name": "PAP Kembangan Kindergarten",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 139,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.866078,
+          1.3143545
+        ]
+      },
+      "properties": {
+        "name": "MindChamps Preschool",
+        "type": "Private",
+        "operator": "MindChamps",
+        "address": "#01-01 Kallang Place",
+        "postal": "339213",
+        "zone": "South",
+        "capacity": 194,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8750673,
+          1.350712
+        ]
+      },
+      "properties": {
+        "name": "SparkleTOTS",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 119,
+        "age_range": "2\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9241975,
+          1.3128484
+        ]
+      },
+      "properties": {
+        "name": "The Gaulois Preschool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "897 East Coast Road",
+        "postal": null,
+        "zone": "East",
+        "capacity": 95,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7164186,
+          1.3515511
+        ]
+      },
+      "properties": {
+        "name": "Little Shepard's Schoolhouse",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 101,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8706617,
+          1.3127285
+        ]
+      },
+      "properties": {
+        "name": "Sparkle Tots",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 63,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8893958,
+          1.334131
+        ]
+      },
+      "properties": {
+        "name": "Cherie Hearts",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 167,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8455359,
+          1.3270098
+        ]
+      },
+      "properties": {
+        "name": "Little Footprints Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "530 Balestier Road",
+        "postal": "329857",
+        "zone": "North-East",
+        "capacity": 151,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8320478,
+          1.3192877
+        ]
+      },
+      "properties": {
+        "name": "Raffles House",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 284,
+        "age_range": "18 months\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8152438,
+          1.2975842
+        ]
+      },
+      "properties": {
+        "name": "Little Paddington Preschool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "314 Tanglin Road",
+        "postal": null,
+        "zone": "South",
+        "capacity": 195,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8460668,
+          1.3324727
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "157",
+        "postal": null,
+        "zone": "West",
+        "capacity": 219,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8781339,
+          1.3793895
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool @ Jalan Kayu",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "987B Buangkok Green",
+        "postal": "532987",
+        "zone": "South",
+        "capacity": 110,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.787502,
+          1.2991275
+        ]
+      },
+      "properties": {
+        "name": "MindChamps Preschool",
+        "type": "Private",
+        "operator": "MindChamps",
+        "address": "Fusionopolis Place",
+        "postal": null,
+        "zone": "North",
+        "capacity": 113,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.859,
+          1.29098
+        ]
+      },
+      "properties": {
+        "name": "MindChamps Preschool",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 129,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8473825,
+          1.3125741
+        ]
+      },
+      "properties": {
+        "name": "Pegasus",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 52,
+        "age_range": "18 months\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8698791,
+          1.3145923
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 132,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8026207,
+          1.4434403
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots",
+        "type": "Private",
+        "operator": "PAP Community Foundation",
+        "address": "789 Woodlands Avenue 6",
+        "postal": "730789",
+        "zone": "East",
+        "capacity": 84,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7003991,
+          1.3419192
+        ]
+      },
+      "properties": {
+        "name": "My First Skool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": "648135",
+        "zone": "East",
+        "capacity": 133,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7696925,
+          1.3404547
+        ]
+      },
+      "properties": {
+        "name": "Willow Nursery",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "26A Toh Tuck Road",
+        "postal": null,
+        "zone": "East",
+        "capacity": 70,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7837673,
+          1.3364258
+        ]
+      },
+      "properties": {
+        "name": "Mosaic Kindergarten",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 194,
+        "age_range": "2\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8665418,
+          1.3300878
+        ]
+      },
+      "properties": {
+        "name": "Ascension Kindergarten",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 135,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8959677,
+          1.3944183
+        ]
+      },
+      "properties": {
+        "name": "Little Footprints Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "260D Sengkang East Way",
+        "postal": "544260",
+        "zone": "North",
+        "capacity": 135,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8704161,
+          1.3286685
+        ]
+      },
+      "properties": {
+        "name": "Bleu Castle",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "MacPherson Road",
+        "postal": null,
+        "zone": "South",
+        "capacity": 73,
+        "age_range": "18 months\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7756921,
+          1.3446967
+        ]
+      },
+      "properties": {
+        "name": "Noah\u2019s Ark Childcare & Development Centre",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 227,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7756219,
+          1.3445851
+        ]
+      },
+      "properties": {
+        "name": "Arise Kindergarten",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "2B Hindhede Road",
+        "postal": "589240",
+        "zone": "West",
+        "capacity": 160,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8300131,
+          1.3731068
+        ]
+      },
+      "properties": {
+        "name": "Puedo Preschool",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "6 Jalan Gelenggang",
+        "postal": null,
+        "zone": "West",
+        "capacity": 87,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9217476,
+          1.3373101
+        ]
+      },
+      "properties": {
+        "name": "Sunflower Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 282,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8948459,
+          1.3329781
+        ]
+      },
+      "properties": {
+        "name": "Child's Atelier",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "33 Ubi Avenue 3",
+        "postal": "408868",
+        "zone": "South",
+        "capacity": 194,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.753923,
+          1.3281102
+        ]
+      },
+      "properties": {
+        "name": "First Steps Preschool @ Jurong",
+        "type": "Anchor Operator",
+        "operator": "First Steps Preschool",
+        "address": "18 Boon Lay Way",
+        "postal": "609966",
+        "zone": "North",
+        "capacity": 55,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8518915,
+          1.3020696
+        ]
+      },
+      "properties": {
+        "name": "Life Childcare Centre",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 255,
+        "age_range": "2\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9132532,
+          1.325099
+        ]
+      },
+      "properties": {
+        "name": "Little Sparks Montessori",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 222,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7665946,
+          1.3398748
+        ]
+      },
+      "properties": {
+        "name": "Maple Bear Highgate",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "2 Highgate Walk",
+        "postal": "598754",
+        "zone": "West",
+        "capacity": 227,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.914276,
+          1.30319
+        ]
+      },
+      "properties": {
+        "name": "My First Skool at Blk 18 Marine Terrace",
+        "type": "Private",
+        "operator": "My First Skool",
+        "address": "18 Marine Terrace #01-108",
+        "postal": "440018",
+        "zone": "South",
+        "capacity": 220,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8432215,
+          1.3380013
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 84,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.843275,
+          1.3379997
+        ]
+      },
+      "properties": {
+        "name": "Carpe Diem Schoolhouse",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 255,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9312121,
+          1.3248658
+        ]
+      },
+      "properties": {
+        "name": "FoodHub",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 298,
+        "age_range": "2\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9285002,
+          1.3479955
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 218,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8929112,
+          1.3889211
+        ]
+      },
+      "properties": {
+        "name": "Little Footprints Preschool Sengkang 201",
+        "type": "Anchor Operator",
+        "operator": "Little Footprints Preschool",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 154,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8864878,
+          1.3934614
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "351 Anchorvale Road",
+        "postal": "540351",
+        "zone": "West",
+        "capacity": 248,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8971687,
+          1.3859519
+        ]
+      },
+      "properties": {
+        "name": "Little Footprints Preschool",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 169,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8968032,
+          1.3864533
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots @ Sengkang Central Blk 206A",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 78,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9064166,
+          1.4023032
+        ]
+      },
+      "properties": {
+        "name": "Metta Preschool @ Punggol",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 57,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9067445,
+          1.4009089
+        ]
+      },
+      "properties": {
+        "name": "Berry Tree Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 263,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9057672,
+          1.4038788
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots Preschool",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 55,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8963126,
+          1.3967804
+        ]
+      },
+      "properties": {
+        "name": "Agape Little Uni @ Compassvale Pte Ltd",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 63,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.896732,
+          1.3963199
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool @ Sengkang Central Blk 290A",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 50,
+        "age_range": "18 months\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8900048,
+          1.3965529
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 129,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8887336,
+          1.3956083
+        ]
+      },
+      "properties": {
+        "name": "Small Wonder Anchorvale",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 272,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8893673,
+          1.3976678
+        ]
+      },
+      "properties": {
+        "name": "Skool4Kidz Anchorvale Cove",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 54,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8916021,
+          1.3950723
+        ]
+      },
+      "properties": {
+        "name": "My First Skool (332B Anchorvale Link)",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 113,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9041603,
+          1.321758
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 86,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8503641,
+          1.3484889
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 83,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8920972,
+          1.385695
+        ]
+      },
+      "properties": {
+        "name": "MY World Preschool Ltd (Compassvale Ancilla)",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 121,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8903667,
+          1.377497
+        ]
+      },
+      "properties": {
+        "name": "Whiz Kids Montessori @ Hougang Pte Ltd",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 256,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.887715,
+          1.3716828
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 267,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8476081,
+          1.3718107
+        ]
+      },
+      "properties": {
+        "name": "Learning Kidz @ Jubilee Square",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 126,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8285067,
+          1.3064088
+        ]
+      },
+      "properties": {
+        "name": "The Kidz Station",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 74,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8841939,
+          1.3577385
+        ]
+      },
+      "properties": {
+        "name": "Kinderland Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 73,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8837734,
+          1.3566467
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool @ Pay Lebar Blk 221",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 296,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8893446,
+          1.3994196
+        ]
+      },
+      "properties": {
+        "name": "M.Y World",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": "540338",
+        "zone": "Central",
+        "capacity": 91,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8945219,
+          1.3149659
+        ]
+      },
+      "properties": {
+        "name": "MindChamps Preschool",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 261,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8906784,
+          1.3931264
+        ]
+      },
+      "properties": {
+        "name": "Agape Child Care (SK)",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 121,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8766708,
+          1.3922787
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool @ Fernvale Blk 436D",
+        "type": "Private",
+        "operator": "PCF Sparkletots Preschool",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 188,
+        "age_range": "4\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8486217,
+          1.276145
+        ]
+      },
+      "properties": {
+        "name": "LeClare@Shenton",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 283,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8824775,
+          1.3599363
+        ]
+      },
+      "properties": {
+        "name": "Catholic Kindergarten",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "15 Flower Road",
+        "postal": "549404",
+        "zone": "East",
+        "capacity": 59,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7997442,
+          1.3250521
+        ]
+      },
+      "properties": {
+        "name": "Learning Vision @ HwaChong",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "673 BTW Timah Rd",
+        "postal": null,
+        "zone": "West",
+        "capacity": 230,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9464233,
+          1.3728194
+        ]
+      },
+      "properties": {
+        "name": "Al-Amin Education Centre",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "570 Pasir Ris Street 53",
+        "postal": "510570",
+        "zone": "South",
+        "capacity": 189,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7960755,
+          1.334009
+        ]
+      },
+      "properties": {
+        "name": "Das kleine Haus",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 169,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.856115,
+          1.3186316
+        ]
+      },
+      "properties": {
+        "name": "YWCA McNair Road Child Development Centre",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 177,
+        "age_range": "4\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8470476,
+          1.3034822
+        ]
+      },
+      "properties": {
+        "name": "MapleBear",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Wilkie Road",
+        "postal": null,
+        "zone": "South",
+        "capacity": 206,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8485443,
+          1.3335584
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 234,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7646372,
+          1.3050469
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 140,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8994797,
+          1.4131272
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots",
+        "type": "Private",
+        "operator": "PAP Community Foundation",
+        "address": "326 Sumang Walk",
+        "postal": "820326",
+        "zone": "North-East",
+        "capacity": 253,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8565757,
+          1.3229093
+        ]
+      },
+      "properties": {
+        "name": "My First Skool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 87,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8562431,
+          1.3225444
+        ]
+      },
+      "properties": {
+        "name": "Sparkle Tots",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 224,
+        "age_range": "4\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8451803,
+          1.3343043
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 140,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9628299,
+          1.3469094
+        ]
+      },
+      "properties": {
+        "name": "Kinderland",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 249,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7853921,
+          1.3091711
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots @ Ulu Pandan Blk 24 (DS)",
+        "type": "MOE Kindergarten",
+        "operator": "PCF Sparkletots",
+        "address": "Singapore",
+        "postal": "270024",
+        "zone": "North-East",
+        "capacity": 288,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7826525,
+          1.3032317
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots @ Telok Blangah Blk 2 (KN)",
+        "type": "Private",
+        "operator": "PCF Sparkletots",
+        "address": "Singapore",
+        "postal": "130002",
+        "zone": "West",
+        "capacity": 167,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9057802,
+          1.3229417
+        ]
+      },
+      "properties": {
+        "name": "Little Atlas Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "8 Jalan Ismail",
+        "postal": "419260",
+        "zone": "Central",
+        "capacity": 228,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9074993,
+          1.3125847
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 192,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.7666019,
+          1.3890384
+        ]
+      },
+      "properties": {
+        "name": "MOE Kindergarten @ West Spring",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 189,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.799715,
+          1.3251155
+        ]
+      },
+      "properties": {
+        "name": "Learning Vision Hwa Chong",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "673 BT Timah Road",
+        "postal": null,
+        "zone": "South",
+        "capacity": 127,
+        "age_range": "4\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8296787,
+          1.4563338
+        ]
+      },
+      "properties": {
+        "name": "Carpe Diem Kidz Playschool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "257 Canada Road",
+        "postal": null,
+        "zone": "North",
+        "capacity": 266,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8360691,
+          1.3039685
+        ]
+      },
+      "properties": {
+        "name": "MindChamps Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 144,
+        "age_range": "18 months\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.810326,
+          1.2712848
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 103,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.852376,
+          1.3332862
+        ]
+      },
+      "properties": {
+        "name": "Mulberry Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "South",
+        "capacity": 273,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8622476,
+          1.3023203
+        ]
+      },
+      "properties": {
+        "name": "Little Quran Kids",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 82,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.801617,
+          1.4431006
+        ]
+      },
+      "properties": {
+        "name": "Sparkletots",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 161,
+        "age_range": "3\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8486588,
+          1.3290421
+        ]
+      },
+      "properties": {
+        "name": "Worldly-Wise International Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "31 Ah Hood Road",
+        "postal": null,
+        "zone": "West",
+        "capacity": 107,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9030177,
+          1.3037118
+        ]
+      },
+      "properties": {
+        "name": "Growing Up Gifted Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 124,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.848384,
+          1.3238223
+        ]
+      },
+      "properties": {
+        "name": "Children's Cove Preschool",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 231,
+        "age_range": "18 months\u20136 years",
+        "accredited": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8939773,
+          1.3824224
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 165,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8940756,
+          1.382722
+        ]
+      },
+      "properties": {
+        "name": "Little Footprints Preschool",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 296,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8970322,
+          1.3940056
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Anchor Operator",
+        "operator": "NTUC First Campus",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 245,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.84208,
+          1.3004914
+        ]
+      },
+      "properties": {
+        "name": "MindChamps",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "East",
+        "capacity": 96,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8904139,
+          1.3909777
+        ]
+      },
+      "properties": {
+        "name": "Berry Tree Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 257,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9015407,
+          1.3892826
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 267,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8993869,
+          1.3826418
+        ]
+      },
+      "properties": {
+        "name": "My First Skool",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 78,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8943419,
+          1.389826
+        ]
+      },
+      "properties": {
+        "name": "E-Bridge Pre-School",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 104,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8990416,
+          1.3980277
+        ]
+      },
+      "properties": {
+        "name": "My First Skool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 204,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8790391,
+          1.3082715
+        ]
+      },
+      "properties": {
+        "name": "EtonHouse Pre-School @ 223 Mountbatten",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "223 Mountbatten Road",
+        "postal": "398008",
+        "zone": "Central",
+        "capacity": 59,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8947787,
+          1.3953045
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "MOE Kindergarten",
+        "operator": "Ministry of Education",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North",
+        "capacity": 276,
+        "age_range": "18 months\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9561995,
+          1.3517857
+        ]
+      },
+      "properties": {
+        "name": "PCF Tampines Changkat Blk 318",
+        "type": "Private",
+        "operator": "EtonHouse International Education Group",
+        "address": "318 33",
+        "postal": "520318",
+        "zone": "North-East",
+        "capacity": 164,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8995003,
+          1.4078597
+        ]
+      },
+      "properties": {
+        "name": "PCF Sparkletots Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "North-East",
+        "capacity": 287,
+        "age_range": "2\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8883169,
+          1.3343858
+        ]
+      },
+      "properties": {
+        "name": "Maplebear Preschool",
+        "type": "Private",
+        "operator": "Private Operator",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "Central",
+        "capacity": 113,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8942857,
+          1.3857566
+        ]
+      },
+      "properties": {
+        "name": "Unknown",
+        "type": "Anchor Operator",
+        "operator": "PAP Community Foundation",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 167,
+        "age_range": "3\u20136 years",
+        "accredited": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.9060039,
+          1.4104109
+        ]
+      },
+      "properties": {
+        "name": "NurtureStars Preschool",
+        "type": "Private",
+        "operator": "MindChamps PreSchool Pte Ltd",
+        "address": "Singapore",
+        "postal": null,
+        "zone": "West",
+        "capacity": 241,
+        "age_range": "4\u20136 years",
+        "accredited": true
+      }
+    }
+  ]
+};
+
+      // Sekolah — marker biru
+      L.geoJSON(schoolsData, {
+        pointToLayer: function (feature, latlng) {
+          return createCircleMarker(latlng, '#3b82f6', '#1d4ed8');
+        },
+        onEachFeature: function (feature, layer) {
+          popupCounter++;
+          var imgId = 'popup-img-' + popupCounter;
+          var popup = buildSchoolPopup(feature.properties, imgId);
+          layer.bindPopup(popup, { maxWidth: 330, minWidth: 280, closeButton: true });
+          
+          layer.on('popupopen', function () {
+            fetchWikipediaImage(feature.properties.name, imgId);
+          });
+          
+          layer.on('click', function (e) {
+            map.flyTo(e.latlng, 16, { duration: 0.8 });
+          });
+          
+          layer.on('mouseover', function () { this.setStyle({ radius: 11, fillOpacity: 1 }); });
+          layer.on('mouseout', function () { this.setStyle({ radius: 8, fillOpacity: 0.85 }); });
+
+          var coords = feature.geometry.coordinates;
+          var idx = allItems.length;
+          allItems.push({
+            type: 'school',
+            props: feature.properties,
+            latlng: [coords[1], coords[0]],
+            layer: layer,
+            globalIndex: idx
+          });
+        }
+      }).addTo(schoolLayer);
+
+      // TK — marker kuning
+      L.geoJSON(kindergartensData, {
+        pointToLayer: function (feature, latlng) {
+          return createCircleMarker(latlng, '#facc15', '#ca8a04');
+        },
+        onEachFeature: function (feature, layer) {
+          popupCounter++;
+          var imgId = 'popup-img-' + popupCounter;
+          var popup = buildKindergartenPopup(feature.properties, imgId);
+          layer.bindPopup(popup, { maxWidth: 330, minWidth: 280, closeButton: true });
+          
+          layer.on('popupopen', function () {
+            fetchWikipediaImage(feature.properties.name, imgId);
+          });
+          
+          layer.on('click', function (e) {
+            map.flyTo(e.latlng, 16, { duration: 0.8 });
+          });
+          
+          layer.on('mouseover', function () { this.setStyle({ radius: 11, fillOpacity: 1 }); });
+          layer.on('mouseout', function () { this.setStyle({ radius: 8, fillOpacity: 0.85 }); });
+
+          var coords = feature.geometry.coordinates;
+          var idx = allItems.length;
+          allItems.push({
+            type: 'kindergarten',
+            props: feature.properties,
+            latlng: [coords[1], coords[0]],
+            layer: layer,
+            globalIndex: idx
+          });
+        }
+      }).addTo(kindergartenLayer);
+
+      // Tambah ke peta
+      schoolLayer.addTo(map);
+      kindergartenLayer.addTo(map);
+
+      // Update semua counter
+      var schoolCount = schoolsData.features.length;
+      var tkCount = kindergartensData.features.length;
+
+      document.getElementById('schoolCount').textContent = schoolCount;
+      document.getElementById('tkCount').textContent = tkCount;
+      document.getElementById('countAll').textContent = schoolCount + tkCount;
+      document.getElementById('countSchool').textContent = schoolCount;
+      document.getElementById('countTK').textContent = tkCount;
+
+      // Layer Control (Basemaps & Overlays)
+      var basemaps = {
+        '🌙  Dark Map': dark,
+        '🗺️  OSM Standard': osm,
+        '🛰️  Satellite': satellite
+      };
+      
+      var overlays = {
+        '🔵  Sekolah': schoolLayer,
+        '🟡  Taman Kanak-Kanak': kindergartenLayer
+      };
+      L.control.layers(basemaps, overlays, { collapsed: true, position: 'topright' }).addTo(map);
+
+      // Render sidebar
+      renderSidebarList();
+
+      // Hilangkan loading
+      document.getElementById('loadingOverlay').classList.add('hidden');
+
+
+
+    // ── Legend Control ─────────────────────────────
+    var legend = L.control({ position: 'bottomright' });
+
+    legend.onAdd = function () {
+      var div = L.DomUtil.create('div', 'legend-control');
+      div.innerHTML =
+        '<div class="legend-title">Legenda</div>' +
+        '<div class="legend-item">' +
+          '<span class="legend-marker blue"></span>' +
+          '<span class="legend-label">Sekolah</span>' +
+        '</div>' +
+        '<div class="legend-item">' +
+          '<span class="legend-marker yellow"></span>' +
+          '<span class="legend-label">Taman Kanak-Kanak</span>' +
+        '</div>';
+      return div;
+    };
+
+    legend.addTo(map);
+  </script>
+
+</body>
+</html>
